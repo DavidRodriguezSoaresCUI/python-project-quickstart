@@ -111,9 +111,17 @@ def main() -> None:
     short_description = user_input(
         "Short project description", accepted=lambda x: len(x) > 0
     )
+    is_single_module_package = (
+        user_input(
+            f"Is {name} a single-module package ? [y/n]",
+            accepted=["y", "n"],
+            default="n",
+        )
+        == "y"
+    )
     add_vscode_black_settings = (
         user_input(
-            "Add .vscode/settings.json file with Black config [y/n]",
+            "Add .vscode/settings.json file with Black config ? [y/n]",
             accepted=["y", "n"],
             default="n",
         )
@@ -126,11 +134,12 @@ def main() -> None:
     # create file structure (raises IOError on existing dirs)
     root_path: Path = CWD / name
     src_path = root_path / "src"
-    module_path = src_path / name
+    module_path = src_path if is_single_module_package else src_path / name
     docs_path = root_path / "docs"
     root_path.mkdir()
     src_path.mkdir()
-    module_path.mkdir()
+    if not is_single_module_package:
+        module_path.mkdir()
     docs_path.mkdir()
 
     # Create standard files
@@ -139,7 +148,10 @@ def main() -> None:
     (root_path / "README.md").write_text(
         README_FILE_CONTENT(name, repo_url, short_description), encoding="utf8"
     )
-    (module_path / "__init__.py").touch()
+    if is_single_module_package:
+        (module_path / (name + ".py")).touch()
+    else:
+        (module_path / "__init__.py").touch()
 
     # Create Python-specific gitignore file
     (root_path / ".gitignore").write_text(GITIGNORE_FILE_CONTENT, encoding="utf8")

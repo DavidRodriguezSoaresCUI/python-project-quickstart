@@ -17,7 +17,14 @@ README_FILE_CONTENT = (
 GITIGNORE_FILE_CONTENT = "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\npip-wheel-metadata/\nshare/python-wheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.nox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n*.py,cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\ndb.sqlite3-journal\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# IPython\nprofile_default/\nipython_config.py\n\n# pyenv\n.python-version\n\n# pipenv\n#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.\n#   However, in case of collaboration, if having platform-specific dependencies or dependencies\n#   having no cross-platform support, pipenv may install dependencies that don't work, or not\n#   install all needed dependencies.\n#Pipfile.lock\n\n# PEP 582; used by e.g. github.com/David-OConnor/pyflow\n__pypackages__/\n\n# Celery stuff\ncelerybeat-schedule\ncelerybeat.pid\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.dmypy.json\ndmypy.json\n\n# Pyre type checker\n.pyre/\n\n# VSCode local settings\n.vscode/settings.json\n\n# static code analysis report\nanalyze_code.report.txt\n"
 VSCODE_SETTING_FILE_CONTENT = '{\n    "[python]": {\n        "editor.defaultFormatter": "ms-python.black-formatter",\n        "editor.formatOnSave": true\n    }\n}'
 PYPROJECT_FILE_CONTENT = (
-    lambda author, author_email, package_name, repo_url, short_description, min_py_ver: f'[build-system]\nrequires = ["setuptools>=61.0"]\nbuild-backend = "setuptools.build_meta"\n\n[project]\nname = "{package_name}"\nversion = "0.0.1"\nauthors = [\n  {{ name="{author}", email="{author_email}" }},\n]\ndescription = "{short_description}"\nreadme = "README.md"\nlicense = {{ file = "LICENSE" }}\nrequires-python = ">={min_py_ver}"\nclassifiers = [\n    "Programming Language :: Python :: 3",\n]\ndependencies = [\n\n]\n\n[project.urls]\n"Homepage" = "{repo_url}"\n"Bug Tracker" = "{repo_url}/issues"'
+    lambda author, author_email, project_name, package_name, repo_url, short_description, min_py_ver, is_pep561, license_classifier: f'[build-system]\nrequires = ["setuptools>=61.0"]\nbuild-backend = "setuptools.build_meta"\n\n[project]\nname = "{package_name}"\nversion = "0.0.1"\nauthors = [\n  {{ name="{author}", email="{author_email}" }},\n]\ndescription = "{short_description}"\nreadme = "README.md"\nlicense = {{ file = "LICENSE" }}\nrequires-python = ">={min_py_ver}"\nclassifiers = [\n    "Programming Language :: Python :: 3",\n'
+    + ("" if license_classifier is None else f'    "{license_classifier}",\n')
+    + f']\ndependencies = [\n\n]\n\n[project.urls]\n"Homepage" = "{repo_url}"\n"Bug Tracker" = "{repo_url}/issues"\n'
+    + (
+        f'\n[tool.setuptools.package-data]\n{project_name} = ["py.typed"]\n'
+        if is_pep561
+        else ""
+    )
 )
 ANALYZE_CODE_BAT_FILE_CONTENT = '@echo off\nSET report_file=analyze_code.report.txt\n\nsetlocal enabledelayedexpansion enableextensions\nset FILE_LIST=\nfor /R src %%F IN (*.py) do (\n    set FILE_LIST=!FILE_LIST! "%%F"\n)\nset FILE_LIST=%FILE_LIST:~1%\n\nECHO Analyzing with MYPY\nECHO ==== MYPY ==== >%report_file%\nECHO (Disable false positives with inline comment "# type: ignore[<ERROR_NAME>]") >>%report_file%\nmypy %FILE_LIST% >>%report_file%\n\nECHO Analyzing with BANDIT\nECHO ==== BANDIT ==== >>%report_file%\nECHO (Disable false positives with inline comment "# nosec <ERROR_CODE>") >>%report_file%\nbandit %FILE_LIST% 1>>%report_file% 2>NUL\n\nECHO Analyzing with PYLINT\nECHO ==== PYLINT ==== >>%report_file%\npylint %FILE_LIST% >>%report_file%\n\nECHO Analyzing with FLAKE8\nECHO ==== FLAKE8 ==== >>%report_file%\npython -m flake8 %FILE_LIST% >>%report_file%\n'
 ANALYZE_CODE_SH_FILE_CONTENT = "report_file=analyze_code.report.txt\n\nFILE_LIST=$(find src -type f -iname \"*.py\" -printf '%p ')\n\necho Analyzing with MYPY\necho ==== MYPY ==== >${report_file}\necho \"(Disable false positives with inline comment '# type: ignore[<ERROR_NAME>]')\" >>${report_file}\nmypy $FILE_LIST >>${report_file}\n\necho Analyzing with BANDIT\necho ==== BANDIT ==== >>${report_file}\necho \"(Disable false positives with inline comment '# nosec <ERROR_CODE>')\" >>${report_file}\nbandit $FILE_LIST 1>>${report_file} 2>NUL\n\necho Analyzing with PYLINT\necho ==== PYLINT ==== >>${report_file}\npylint $FILE_LIST >>${report_file}\n\necho Analyzing with FLAKE8\necho ==== FLAKE8 ==== >>${report_file}\nflake8 $FILE_LIST >>${report_file}\n"
@@ -29,6 +36,30 @@ SPHINX_REBUILD_SH_FILE_CONTENT = (
     lambda project_name, author: f'#! /bin/bash\n\necho Rebuilding source directory\nfind ./source -mindepth 1 -delete 2>/dev/null\nrmdir ./source\nsphinx-apidoc -f --maxdepth 4 --separate --doc-project "{project_name}" --doc-author "{author}" --full -o source ../src/{project_name}\npython3 sphinx-patch-conf.py\n\necho Rebuilding HTML build\nfind ./build -mindepth 1 -delete 2>/dev/null\nrmdir ./build\nsphinx-build source build\necho Done ! Open build/index.html to see documentation'
 )
 SPHINX_PATCH_CONF_FILE_CONTENT = "from pathlib import Path\n\n\ndef main() -> None:\n    conf_file = Path('./source/conf.py')\n    conf = conf_file.read_text(encoding='utf8')\n    if not 'sys.path.insert' in conf:\n        conf_file.write_text(\n            \"import os\\nimport sys\\nsys.path.insert(0, os.path.abspath('../../src/'))\\n\"\n            + conf.replace(\"html_theme = 'alabaster'\", \"html_theme = 'furo'\"),\n            encoding='utf8'\n        )\n\n\nif __name__ == '__main__':\n    main()\n"
+PYPI_LICENSE_CLASSIFIER_BY_LICE_CODE = {
+    "afl3": "License :: OSI Approved :: Academic Free License (AFL)",
+    "agpl3": "License :: OSI Approved :: GNU Affero General Public License v3",
+    "apache": "License :: OSI Approved :: Apache Software License",
+    "bsd2": "License :: OSI Approved :: BSD License",
+    "bsd3": "License :: OSI Approved :: BSD License",
+    "cc0": "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "cc_by": None,
+    "cc_by_nc": None,
+    "cc_by_nc_nd": None,
+    "cc_by_nc_sa": None,
+    "cc_by_nd": None,
+    "cc_by_sa": None,
+    "cddl": "License :: OSI Approved :: Common Development and Distribution License 1.0 (CDDL-1.0)",
+    "epl": "License :: OSI Approved :: Eclipse Public License 1.0 (EPL-1.0)",
+    "gpl2": "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "gpl3": "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "isc": "License :: OSI Approved :: ISC License (ISCL)",
+    "lgpl": "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "mit": "License :: OSI Approved :: MIT License",
+    "mpl": "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "wtfpl": None,
+    "zlib": "License :: OSI Approved :: zlib/libpng License",
+}
 
 
 def execute(command) -> dict[str, str]:
@@ -170,6 +201,14 @@ def main() -> None:
         )
         == "y"
     )
+    is_pep561 = (
+        user_input(
+            f"Declare {name} as a PEP-561 compliant package (adds py.typed) ? [y/n]",
+            accepted=["y", "n"],
+            default="n",
+        )
+        == "y"
+    )
     add_vscode_black_settings = (
         user_input(
             "Add .vscode/settings.json file with Black config ? [y/n]",
@@ -182,6 +221,12 @@ def main() -> None:
         f"Choose a license [{','.join(available_licenses)}]",
         accepted=available_licenses,
     )
+    license_classifier = PYPI_LICENSE_CLASSIFIER_BY_LICE_CODE.get(license_name)
+    if license_classifier is None:
+        print(f"WARNING: license '{license_name}' doesn't have a pypi classifier")
+    elif "OSI Approved" not in license_classifier:
+        print(f"INFO: license '{license_name}' isn't OSI approved")
+
     min_py_ver = user_input(f"Minimum Python version", default=DEFAULT_MIN_PY_VER)
 
     package_name = f"{name}-{author}"
@@ -210,6 +255,8 @@ def main() -> None:
         (module_path / (name + ".py")).touch()
     else:
         (module_path / "__init__.py").touch()
+    if is_pep561:
+        (module_path / "py.typed").touch()
 
     # Create Python-specific gitignore file
     (root_path / ".gitignore").write_text(GITIGNORE_FILE_CONTENT, encoding="utf8")
@@ -217,7 +264,15 @@ def main() -> None:
     # Create Pypi package config file
     (root_path / "pyproject.toml").write_text(
         PYPROJECT_FILE_CONTENT(
-            author, author_email, package_name, repo_url, short_description, min_py_ver
+            author,
+            author_email,
+            name,
+            package_name,
+            repo_url,
+            short_description,
+            min_py_ver,
+            is_pep561,
+            license_classifier,
         ),
         encoding="utf8",
     )

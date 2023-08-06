@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Sections should be one of: Added, Changed, Fixed, Removed -->
 
+## 2023-08-06
+
+### Added
+
+- Automatically adds Pypy license classifier when possible or warns that chosen license doesn't hava a corresponding Pypy classifier
+- Adds info message when chosen license isn't OSI approved
+- Ability to make created package PEP-561 compliant through `py.typed` file
 
 ## 2023-08-05
 

@@ -227,7 +227,11 @@ def main() -> None:
     elif "OSI Approved" not in license_classifier:
         print(f"INFO: license '{license_name}' isn't OSI approved")
 
-    min_py_ver = user_input(f"Minimum Python version", default=DEFAULT_MIN_PY_VER)
+    min_py_ver = user_input(
+        "Minimum Python version",
+        accepted=lambda x: len(x) in {3, 4} and x.startswith("3."),
+        default=DEFAULT_MIN_PY_VER,
+    )
 
     package_name = f"{name}-{author}"
     print(f"Package name: '{package_name}'")

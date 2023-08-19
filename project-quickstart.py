@@ -30,10 +30,14 @@ ANALYZE_CODE_BAT_FILE_CONTENT = '@echo off\nSET report_file=analyze_code.report.
 ANALYZE_CODE_SH_FILE_CONTENT = "report_file=analyze_code.report.txt\n\nFILE_LIST=$(find src -type f -iname \"*.py\" -printf '%p ')\n\necho Analyzing with MYPY\necho ==== MYPY ==== >${report_file}\necho \"(Disable false positives with inline comment '# type: ignore[<ERROR_NAME>]')\" >>${report_file}\nmypy $FILE_LIST >>${report_file}\n\necho Analyzing with BANDIT\necho ==== BANDIT ==== >>${report_file}\necho \"(Disable false positives with inline comment '# nosec <ERROR_CODE>')\" >>${report_file}\nbandit $FILE_LIST 1>>${report_file} 2>NUL\n\necho Analyzing with PYLINT\necho ==== PYLINT ==== >>${report_file}\npylint $FILE_LIST >>${report_file}\n\necho Analyzing with FLAKE8\necho ==== FLAKE8 ==== >>${report_file}\nflake8 $FILE_LIST >>${report_file}\n"
 INDEX_RST_FILE_CONTENT = "Welcome to {module_name}'s documentation!\n==================================\n\n.. automodule:: {module_name}\n   :members:\n   :undoc-members:\n   :show-inheritance:\n\n.. toctree::\n   :maxdepth: 2\n   :caption: Contents:\n\nFind more\n---------\n\n* :ref:`genindex`\n* :ref:`modindex`\n* :ref:`search`"
 SPHINX_REBUILD_BAT_FILE_CONTENT = (
-    lambda project_name, author: f'@echo off\n\necho Rebuilding source directory\nRD /S /Q ".\source"\nsphinx-apidoc -f --maxdepth 4 --separate --doc-project "{project_name}" --doc-author "{author}" --full -o source ../src/{project_name}\npython sphinx-patch-conf.py\n\necho Rebuilding HTML build\nRD /S /Q ".\\build"\nsphinx-build source build\necho Done ! Open build/index.html to see documentation'
+    lambda project_name, author, is_single_module_package: f'@echo off\n\necho Rebuilding source directory\nRD /S /Q ".\source"\nsphinx-apidoc -f --maxdepth 4 --separate --doc-project "{project_name}" --doc-author "{author}" --full -o source ../src'
+    + ("" if is_single_module_package else "/{project_name}")
+    + '\npython sphinx-patch-conf.py\n\necho Rebuilding HTML build\nRD /S /Q ".\\build"\nsphinx-build source build\necho Done ! Open build/index.html to see documentation'
 )
 SPHINX_REBUILD_SH_FILE_CONTENT = (
-    lambda project_name, author: f'#! /bin/bash\n\necho Rebuilding source directory\nfind ./source -mindepth 1 -delete 2>/dev/null\nrmdir ./source\nsphinx-apidoc -f --maxdepth 4 --separate --doc-project "{project_name}" --doc-author "{author}" --full -o source ../src/{project_name}\npython3 sphinx-patch-conf.py\n\necho Rebuilding HTML build\nfind ./build -mindepth 1 -delete 2>/dev/null\nrmdir ./build\nsphinx-build source build\necho Done ! Open build/index.html to see documentation'
+    lambda project_name, author, is_single_module_package: f'#! /bin/bash\n\necho Rebuilding source directory\nfind ./source -mindepth 1 -delete 2>/dev/null\nrmdir ./source\nsphinx-apidoc -f --maxdepth 4 --separate --doc-project "{project_name}" --doc-author "{author}" --full -o source ../src'
+    + ("" if is_single_module_package else "/{project_name}")
+    + "\npython3 sphinx-patch-conf.py\n\necho Rebuilding HTML build\nfind ./build -mindepth 1 -delete 2>/dev/null\nrmdir ./build\nsphinx-build source build\necho Done ! Open build/index.html to see documentation"
 )
 SPHINX_PATCH_CONF_FILE_CONTENT = "from pathlib import Path\n\n\ndef main() -> None:\n    conf_file = Path('./source/conf.py')\n    conf = conf_file.read_text(encoding='utf8')\n    if not 'sys.path.insert' in conf:\n        conf_file.write_text(\n            \"import os\\nimport sys\\nsys.path.insert(0, os.path.abspath('../../src/'))\\n\"\n            + conf.replace(\"html_theme = 'alabaster'\", \"html_theme = 'furo'\"),\n            encoding='utf8'\n        )\n\n\nif __name__ == '__main__':\n    main()\n"
 PYPI_LICENSE_CLASSIFIER_BY_LICE_CODE = {
@@ -297,10 +301,14 @@ def main() -> None:
         "furo>=2023\nSphinx>=6.1.3", encoding="utf8"
     )
     (docs_path / "sphinx-full-rebuild.bat").write_text(
-        SPHINX_REBUILD_BAT_FILE_CONTENT(name, author), encoding="utf8", newline="\r\n"
+        SPHINX_REBUILD_BAT_FILE_CONTENT(name, author, is_single_module_package),
+        encoding="utf8",
+        newline="\r\n",
     )
     (docs_path / "sphinx-full-rebuild.sh").write_text(
-        SPHINX_REBUILD_SH_FILE_CONTENT(name, author), encoding="utf8", newline="\n"
+        SPHINX_REBUILD_SH_FILE_CONTENT(name, author, is_single_module_package),
+        encoding="utf8",
+        newline="\n",
     )
     (docs_path / "sphinx-patch-conf.py").write_text(
         SPHINX_PATCH_CONF_FILE_CONTENT, encoding="utf8"

@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Sections should be one of: Added, Changed, Fixed, Removed -->
 
+## 2023-08-19
+
+### BugFix
+
+- Fixed nonfunctioning sphinx documentation build script for single-file modules
+
 ## 2023-08-13
 
 ### BugFix

@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Sections should be one of: Added, Changed, Fixed, Removed -->
 
+## 2023-08-27
+
+### Added
+
+- Analysis script: added comments in pylint and flake8 sections on how to disable some rules
+
 ## 2023-08-19
 
 ### BugFix

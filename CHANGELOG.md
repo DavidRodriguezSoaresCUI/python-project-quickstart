@@ -1,10 +1,35 @@
 # Changelog for Python Project Quickstart
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Sections should be one of: Added, Changed, Fixed, Removed -->
+
+## 2025-01-02
+
+### Added
+
+- ``README`` section for install from source
+- ``README`` section for install optional dependencies
+- ``README`` footer referencing python-project-quickstart
+- ``pyproject`` section for optional dependencies
+- ``pytest`` testing
+
+### BugFix
+
+- fix for sphinx rebuild scripts with non-interpreted project name
+- Support for `Python<3.10`
+
+### Change
+
+- some refactoring
+- Overhaul of package and distribution/project name handling to respect conventions (see README)
+
+### Removed
+
+- Redundant dependencies files
 
 ## 2023-08-27
 
